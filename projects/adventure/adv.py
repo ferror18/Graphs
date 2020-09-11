@@ -15,8 +15,8 @@ world = World()
 # map_file = "maps/test_line.txt"
 # map_file = "maps/test_cross.txt"
 # map_file = "maps/test_loop.txt"
-map_file = "maps/test_loop_fork.txt"
-# map_file = "maps/main_maze.txt"
+# map_file = "maps/test_loop_fork.txt"
+map_file = "maps/main_maze.txt"
 
 # Loads the map into a dictionary
 room_graph=literal_eval(open(map_file, "r").read())
@@ -84,6 +84,7 @@ def find_unxplored(room):
         print(visited, current)
         n = Map[current]
         if '?' in n.values():
+            path.append(current)
             print('traceback',path)
             return path
         for i in n.items():
@@ -91,10 +92,10 @@ def find_unxplored(room):
             id = i[1]
             if id != None and id not in visited:
                 q.enqueue(id)
-                visited[current] = d
-        path.append(visited[current])
+                break
+        visited[current] = None
+        path.append(current)
         print('traceback',path)
-
 
     print('traceback',path)
     return path
@@ -126,11 +127,31 @@ while len(Map) < len(room_graph):
                 print(p2.current_room.id)
                 print(Map)
                 break
+            elif Map[current][i] == '?':
+                print('Current room:', p2.current_room.id)
+                print(f'Attemted to move "{i}" from {current} to {next_room}')
+                old = copy.deepcopy(current)
+                p2.travel(i)
+                Map[old][i] = p2.current_room.id
+                n2 = p2.current_room.get_exits()
+                Map[p2.current_room.id][back[i]] = old
+                traceback_path.append(back[i])
+                traversal_path.append(i)
+                print(p2.current_room.id)
+                print(Map)
+                break
         if i == 'w':
-            # pass
-            # go_to_unxplored(p2.current_room.id)
-            traceback_path = find_unxplored(p2.current_room.id)
-            # print(traceback_path)
+            print('Dead End')
+            traceback_path = []
+            traceback_nodes = find_unxplored(p2.current_room.id)
+            for i in range(len(traceback_nodes)-1):
+                current = traceback_nodes[i]
+                destination = traceback_nodes[i+1]
+                for x in Map[current].items():
+                    if x[1] == destination:
+                        traceback_path.append(x[0])
+                        break
+            print('traceback',traceback_path)
             for i in traceback_path:
                 print('Current room:', p2.current_room.id)
                 print(f'Attemted to move "{i}" from {p2.current_room.id} to {Map[p2.current_room.id][i]}')
@@ -140,7 +161,7 @@ while len(Map) < len(room_graph):
                 # traceback_path = []
                 # print(f'Traced back to {current}')
 
-    # if current == 0:
+    # if current == 4:
     #     break
 
 
